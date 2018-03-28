@@ -7,7 +7,9 @@ import (
 	"github.com/visheratin/ico-crawler/misc"
 )
 
-var mainLink = "https://icorating.com/ico/?filter=all"
+//var mainLink = "https://icorating.com/ico/?filter=all"
+//var mainLink = "https://bitinfocharts.com/cryptocurrency-prices/"
+var mainLink = "https://ru.investing.com/crypto/currencies"
 
 type ICORatingCrawler struct {
 	workers []*ICORatingWorker
@@ -57,9 +59,13 @@ func (crawler *ICORatingCrawler) GetEntitiesLinks(mainPageLink string) ([]string
 	if err != nil {
 		return nil, err
 	}
+
+	//fmt.Println(doc.Text())
+
 	result := []string{}
-	doc.Find("tr").Each(func(i int, s *goquery.Selection) {
-		href, found := s.Attr("data-href")
+	doc.Find("td:first-child + td + td a").Each(func(i int, s *goquery.Selection) {
+		//result = append(result, s.Text())
+		href, found := s.Attr("href")
 		if found {
 			result = append(result, href)
 		}

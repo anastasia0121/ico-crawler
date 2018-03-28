@@ -18,7 +18,7 @@ type ICORatingWorker struct {
 func (worker *ICORatingWorker) Start() error {
 	for _, link := range worker.links {
 		entity, _ := worker.GetDetails(link)
-		outputPath := "./data/icorating/"
+		outputPath := "./data3/icorating/"
 		outFilename := entity.Title + ".json"
 		writer.WriteToFS(outputPath, outFilename, entity)
 	}
@@ -26,32 +26,40 @@ func (worker *ICORatingWorker) Start() error {
 }
 
 func (worker *ICORatingWorker) GetDetails(detailsLink string) (model.ICORatingCompany, error) {
-	doc, err := goquery.NewDocument(detailsLink)
+	doc, err := goquery.NewDocument("https://ru.investing.com" + detailsLink + "/markets")
 	if err != nil {
 		return model.ICORatingCompany{}, err
 	}
 	result := model.ICORatingCompany{}
 	titleNode := doc.Find("h1")
 	if len(titleNode.Nodes) > 0 {
-		result.Title = titleNode.Text()
+		result.Title = clearText(titleNode.Text())
 	}
-	tableCells := doc.Find("td")
-	for i := range tableCells.Nodes {
-		cell := tableCells.Eq(i)
-		text := cell.Text()
-		if text == "Product Type:" {
-			result.Type = clearText(cell.Siblings().Text())
-		}
-		if text == "Industry:" {
-			result.Industry = clearText(cell.Siblings().Text())
-		}
-		if text == "Description:" {
-			result.Description = clearText(cell.Siblings().Text())
-		}
-		if text == "Features:" {
-			result.Features = clearText(cell.Siblings().Text())
-		}
+
+	tableCells := doc.Find("td:first-child + td + td, td:first-child + td + td + td + td, td:first-child + td + td + td + td + td, td:first-child + td + td + td + td + td +td + td")
+
+	for i := 1; i < len(tableCells.Nodes); i++ {
+
+		m := model.Market{}
+
+		cell1 := tableCells.Eq(i)
+		m.Name = clearText(cell1.Text())
+
+		i += 1
+		cell2 := tableCells.Eq(i)
+		m.Max = clearText(cell2.Text())
+
+		i += 1
+		cell3 := tableCells.Eq(i)
+		m.Min = clearText(cell3.Text())
+
+		i += 1
+		cell4 := tableCells.Eq(i)
+		m.Volume = clearText(cell4.Text())
+
+		result.Markets = append(result.Markets, m)
 	}
+
 	return result, nil
 }
 
